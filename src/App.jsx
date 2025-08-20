@@ -9,7 +9,7 @@ const GRID_SIZE = 10;
 const CELL = 1;
 const NUM_ZOMBIES = 1;
 const STEP_INTERVAL_MS = 90; // Player movement throttle
-const ZOMBIE_STEP_INTERVAL_MS = 280; // Zombie movement throttle
+const ZOMBIE_STEP_INTERVAL_MS = 200; // Zombie movement throttle
 const OBSTACLE_DENSITY = 0.3;
 
 // Utility: clamp within [0, GRID_SIZE-1]
@@ -173,7 +173,8 @@ function Zombie({ pos }) {
 }
 
 // ------------------ GAME CORE ------------------ //
-function useKeyboardMovement(grid, playerPos, setPlayerPos, setMoves) {
+function useKeyboardMovement(grid, playerPos, setPlayerPos, onMove) {
+
   const lastMoveRef = useRef(0);
   const pressedKeysRef = useRef(new Set());
 
@@ -213,7 +214,7 @@ function useKeyboardMovement(grid, playerPos, setPlayerPos, setMoves) {
       const ny = clamp(playerPos.y + dir.dy, 0, GRID_SIZE - 1);
       if (grid[ny][nx] === 0) {
         setPlayerPos({ x: nx, y: ny });
-        setMoves((m) => m + 1);
+        onMove((m) => m + 1);
       }
     }
   });
@@ -293,9 +294,9 @@ function HUD({ moves, gameOver, onReset }) {
 
 // ------------------ GAME COMPONENT ------------------ //
 // This component contains all the game's state and logic
-function Game({ onGameOver, onResetGame, onMove, currentSpeed }) {
+function Game({ onGameOver, onResetGame, onMove, currentSpeed,moves  }) {
   const [grid, setGrid] = useState(() => generateGrid());
-  const [moves, setMoves] = useState(0);
+  
   const [playerPos, setPlayerPos] = useState(() => randomEmptyCell(grid));
   const [zombiePositions, setZombiePositions] = useState(() =>
     Array.from({ length: NUM_ZOMBIES }, () => {
@@ -312,7 +313,8 @@ function Game({ onGameOver, onResetGame, onMove, currentSpeed }) {
     }
   }, [moves]);
 
-  useKeyboardMovement(grid, playerPos, setPlayerPos, setMoves);
+  useKeyboardMovement(grid, playerPos, setPlayerPos, onMove);
+
 
   useEffect(() => {
     for (const z of zombiePositions) {
@@ -342,10 +344,11 @@ function Game({ onGameOver, onResetGame, onMove, currentSpeed }) {
 
 // ------------------ MAIN APP COMPONENT ------------------ //
 export default function ZombieSurvivor() {
-  const [moves, setMoves] = useState(0);
+  //
+  
   const [gameOver, setGameOver] = useState(false);
   const [resetKey, setResetKey] = useState(0);
-
+  const [moves, setMoves] = useState(0);
   const onGameOver = () => setGameOver(true);
   const onReset = () => {
     setGameOver(false);
@@ -360,7 +363,8 @@ export default function ZombieSurvivor() {
         <ambientLight intensity={0.8} />
         <directionalLight castShadow position={[8, 14, 6]} intensity={0.7} shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
         <group key={resetKey}>
-          <Game onGameOver={onGameOver} onMove={setMoves} />
+          <Game onGameOver={onGameOver}  onMove={setMoves} moves={moves} />
+
         </group>
       </Canvas>
     </div>
