@@ -8,33 +8,14 @@ import "./App.css";
 const GRID_SIZE = 10;
 const CELL = 1;
 const NUM_ZOMBIES = 1;
-const STEP_INTERVAL_MS = 90; // Player movement throttle
-const ZOMBIE_STEP_INTERVAL_MS = 200; // Zombie movement throttle
+const STEP_INTERVAL_MS = 90;
+const ZOMBIE_STEP_INTERVAL_MS = 200;
 const OBSTACLE_DENSITY = 0.3;
 
 // Utility: clamp within [0, GRID_SIZE-1]
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-function keyToDir(code) {
-  switch (code) {
-    case "KeyW":
-    case "ArrowUp":
-      return { dx: 0, dy: -1 };
-    case "KeyS":
-    case "ArrowDown":
-      return { dx: 0, dy: 1 };
-    case "KeyA":
-    case "ArrowLeft":
-      return { dx: -1, dy: 0 };
-    case "KeyD":
-    case "ArrowRight":
-      return { dx: 1, dy: 0 };
-    default:
-      return null;
-  }
-}
-
-// ------------------ PATHFINDING (Dijkstra) ------------------ //
+// ------------------ PATHFINDING ------------------ //
 function neighborsOf(x, y, grid) {
   const neigh = [];
   const tryPush = (nx, ny) => {
@@ -99,7 +80,7 @@ function reconstructPath(prev, start, goal) {
   return path.map((s) => s.split(",").map((v) => parseInt(v, 10)));
 }
 
-// ------------------ GRID / WORLD HELPERS ------------------ //
+// ------------------ GRID HELPERS ------------------ //
 function worldFromGrid(x, y) {
   const half = (GRID_SIZE * CELL) / 2;
   const wx = -half + x * CELL + CELL / 2;
@@ -172,19 +153,16 @@ function Zombie({ pos }) {
   );
 }
 
-// ------------------ GAME CORE ------------------ //
-function useKeyboardMovement(grid, playerPos, setPlayerPos, onMove) {
-
+// ------------------ MOVEMENT HOOK ------------------ //
+function useKeyboardMovement(grid, playerPos, setPlayerPos, setMoves, isGameOver) {
   const lastMoveRef = useRef(0);
   const pressedKeysRef = useRef(new Set());
 
   useEffect(() => {
     const onKeyDown = (e) => pressedKeysRef.current.add(e.code);
     const onKeyUp = (e) => pressedKeysRef.current.delete(e.code);
-
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
-
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
@@ -192,36 +170,28 @@ function useKeyboardMovement(grid, playerPos, setPlayerPos, onMove) {
   }, []);
 
   useFrame(() => {
+    if (isGameOver) return;
     const now = performance.now();
-    if (now - lastMoveRef.current < STEP_INTERVAL_MS) {
-      return;
-    }
+    if (now - lastMoveRef.current < STEP_INTERVAL_MS) return;
     lastMoveRef.current = now;
-
     let dir = null;
-    if (pressedKeysRef.current.has("KeyW") || pressedKeysRef.current.has("ArrowUp")) {
-      dir = { dx: 0, dy: -1 };
-    } else if (pressedKeysRef.current.has("KeyS") || pressedKeysRef.current.has("ArrowDown")) {
-      dir = { dx: 0, dy: 1 };
-    } else if (pressedKeysRef.current.has("KeyA") || pressedKeysRef.current.has("ArrowLeft")) {
-      dir = { dx: -1, dy: 0 };
-    } else if (pressedKeysRef.current.has("KeyD") || pressedKeysRef.current.has("ArrowRight")) {
-      dir = { dx: 1, dy: 0 };
-    }
-
+    if (pressedKeysRef.current.has("KeyW") || pressedKeysRef.current.has("ArrowUp")) dir = { dx: 0, dy: -1 };
+    else if (pressedKeysRef.current.has("KeyS") || pressedKeysRef.current.has("ArrowDown")) dir = { dx: 0, dy: 1 };
+    else if (pressedKeysRef.current.has("KeyA") || pressedKeysRef.current.has("ArrowLeft")) dir = { dx: -1, dy: 0 };
+    else if (pressedKeysRef.current.has("KeyD") || pressedKeysRef.current.has("ArrowRight")) dir = { dx: 1, dy: 0 };
     if (dir) {
       const nx = clamp(playerPos.x + dir.dx, 0, GRID_SIZE - 1);
       const ny = clamp(playerPos.y + dir.dy, 0, GRID_SIZE - 1);
       if (grid[ny][nx] === 0) {
         setPlayerPos({ x: nx, y: ny });
-        onMove((m) => m + 1);
+        setMoves((m) => m + 1);
       }
     }
   });
-
   return null;
 }
 
+// ------------------ HELPERS ------------------ //
 function randomEmptyCell(grid) {
   while (true) {
     const x = Math.floor(Math.random() * GRID_SIZE);
@@ -243,49 +213,47 @@ function generateGrid(seed = 0) {
   return grid;
 }
 
-function ZombiesController({ grid, zombiePositions, setZombiePositions, playerPos, zombieSpeed }) {
+// ------------------ ZOMBIE CONTROLLER ------------------ //
+function ZombiesController({ grid, zombiePositions, setZombiePositions, playerPos, zombieSpeed, isGameOver }) {
   const lastStepRef = useRef(performance.now());
-  const zombieRefs = useRef([]);
 
   useFrame(() => {
+    if (isGameOver) return;
+
     const now = performance.now();
     if (now - lastStepRef.current >= zombieSpeed) {
       lastStepRef.current = now;
 
       setZombiePositions((prev) =>
         prev.map((z) => {
-          const pathResult = dijkstra(grid, [z.x, z.y], [playerPos.x, playerPos.y]);
-          const path = reconstructPath(pathResult.prev, [z.x, z.y], [playerPos.x, playerPos.y]);
+          const { prev: p } = dijkstra(grid, [z.x, z.y], [playerPos.x, playerPos.y]);
+          const path = reconstructPath(p, [z.x, z.y], [playerPos.x, playerPos.y]);
           if (path.length > 0) {
             const [nextX, nextY] = path[0];
-            return { x: nextX, y: nextY, stepStart: now };
+            return { x: nextX, y: nextY };
           }
-          return { ...z, stepStart: now };
+          return z;
         })
       );
     }
   });
 
-  return (zombiePositions || []).map((z, i) => (
-    <Zombie
-      key={i}
-      pos={z}
-      stepStart={z.stepStart || lastStepRef.current}
-      stepDuration={zombieSpeed}
-    />
-  ));
+  return (zombiePositions || []).map((z, i) => <Zombie key={i} pos={z} />);
 }
 
+// ------------------ HUD ------------------ //
 function HUD({ moves, gameOver, onReset }) {
   return (
-    <div style={{ position: "absolute", top: 12, left: 12, padding: "8px 10px", background: "rgba(0,0,0,0.45)", color: "#fff", borderRadius: 8, fontFamily: "ui-sans-serif, system-ui, -apple-system" }}>
+    <div style={{ position: "absolute", top: 12, left: 12, padding: "8px 10px", background: "rgba(0,0,0,0.45)", color: "#fff", borderRadius: 8, fontFamily: "ui-sans-serif, system-ui" }}>
       <div style={{ fontWeight: 700, marginBottom: 4 }}>Zombie Survivor</div>
       <div>Moves: {moves}</div>
       <div>Controls: WASD / Arrows</div>
       {gameOver && (
         <div style={{ marginTop: 6 }}>
           <div style={{ color: "#f87171", fontWeight: 700 }}>Game Over!</div>
-          <button onClick={onReset} style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, border: "1px solid #fff", background: "transparent", color: "#fff", cursor: "pointer" }}>Reset</button>
+          <button onClick={onReset} style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, border: "1px solid #fff", background: "transparent", color: "#fff", cursor: "pointer" }}>
+            Reset
+          </button>
         </div>
       )}
     </div>
@@ -293,67 +261,71 @@ function HUD({ moves, gameOver, onReset }) {
 }
 
 // ------------------ GAME COMPONENT ------------------ //
-// This component contains all the game's state and logic
-function Game({ onGameOver, onResetGame, onMove, currentSpeed,moves  }) {
-  const [grid, setGrid] = useState(() => generateGrid());
-  
+function Game({ onGameOver, setMoves, moves, isGameOver }) {
+  const [grid] = useState(() => generateGrid());
   const [playerPos, setPlayerPos] = useState(() => randomEmptyCell(grid));
   const [zombiePositions, setZombiePositions] = useState(() =>
-    Array.from({ length: NUM_ZOMBIES }, () => {
-      const cell = randomEmptyCell(grid);
-      return { ...cell, stepStart: performance.now() };
-    })
+    Array.from({ length: NUM_ZOMBIES }, () => randomEmptyCell(grid))
   );
-
   const [zombieSpeed, setZombieSpeed] = useState(ZOMBIE_STEP_INTERVAL_MS);
+
+  useKeyboardMovement(grid, playerPos, setPlayerPos, setMoves, isGameOver);
 
   useEffect(() => {
     if (moves > 0 && moves % 10 === 0) {
-      setZombieSpeed(prevSpeed => Math.max(prevSpeed - 20, 40));
+      setZombieSpeed((prev) => Math.max(prev - 20, 40));
     }
   }, [moves]);
 
-  useKeyboardMovement(grid, playerPos, setPlayerPos, onMove);
-
-
+  // **CRITICAL FIX:** Added `isGameOver` to the dependency array
   useEffect(() => {
+    if (isGameOver) return; // Exit early if the game is over
+
     for (const z of zombiePositions) {
       if (z.x === playerPos.x && z.y === playerPos.y) {
         onGameOver();
         break;
       }
     }
-  }, [playerPos, zombiePositions, onGameOver]);
+  }, [playerPos, zombiePositions, onGameOver, isGameOver]);
 
   return (
     <>
       <Floor />
-      <Grid args={[GRID_SIZE * CELL, GRID_SIZE * CELL]} sectionColor="#1f2937" cellColor="#111827" fadeDistance={20} infiniteGrid={false} position={[0, 0.001, 0]} />
+      <Grid
+        args={[GRID_SIZE * CELL, GRID_SIZE * CELL]}
+        sectionColor="#1f2937"
+        cellColor="#111827"
+        fadeDistance={20}
+        infiniteGrid={false}
+        position={[0, 0.001, 0]}
+      />
       <CellWalls grid={grid} />
       <Player pos={playerPos} />
-      <ZombiesController
-        grid={grid}
-        playerPos={playerPos}
-        zombiePositions={zombiePositions}
-        setZombiePositions={setZombiePositions}
-        zombieSpeed={zombieSpeed}
-      />
+      {!isGameOver && (
+        <ZombiesController
+          grid={grid}
+          playerPos={playerPos}
+          zombiePositions={zombiePositions}
+          setZombiePositions={setZombiePositions}
+          zombieSpeed={zombieSpeed}
+          isGameOver={isGameOver}
+        />
+      )}
     </>
   );
 }
 
-// ------------------ MAIN APP COMPONENT ------------------ //
+// ------------------ MAIN APP ------------------ //
 export default function ZombieSurvivor() {
-  //
-  
   const [gameOver, setGameOver] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [moves, setMoves] = useState(0);
-  const onGameOver = () => setGameOver(true);
+
   const onReset = () => {
     setGameOver(false);
     setMoves(0);
-    setResetKey(prev => prev + 1); // Triggers a re-render of Game
+    setResetKey((k) => k + 1);
   };
 
   return (
@@ -362,10 +334,13 @@ export default function ZombieSurvivor() {
       <Canvas shadows camera={{ position: [0, 20, 0], fov: 40, rotation: [-Math.PI / 2, 0, 0] }}>
         <ambientLight intensity={0.8} />
         <directionalLight castShadow position={[8, 14, 6]} intensity={0.7} shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-        <group key={resetKey}>
-          <Game onGameOver={onGameOver}  onMove={setMoves} moves={moves} />
-
-        </group>
+        <Game
+          key={resetKey}
+          onGameOver={() => setGameOver(true)}
+          setMoves={setMoves}
+          moves={moves}
+          isGameOver={gameOver}
+        />
       </Canvas>
     </div>
   );
