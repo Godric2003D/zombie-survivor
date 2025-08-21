@@ -33,10 +33,10 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
 
   useEffect(() => {
     if (moves > 0 && moves % 10 === 0) {
-      setZombieSpeed((prev) => Math.max(prev - 20, 40));
+      setZombieSpeed((prev) => Math.max(prev - 20, 80));
     }
   }, [moves]);
-
+  
   useEffect(() => {
     if (isGameOver) return;
     for (const z of zombiePositions) {

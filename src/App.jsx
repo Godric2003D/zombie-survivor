@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import HUD from "./Components/HUD/HUD";
 import Game from "./Components/Game/Game";
-import "./App.css"; // ✅ Import global styles
+import "./App.css"; 
 export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [moves, setMoves] = useState(0);
@@ -11,14 +11,14 @@ export default function App() {
 
   const onGameOver = () => {
     setGameOver(true);
-    // ✅ Update high score if this run was better
+    
     setHighScore((prev) => (moves > prev ? moves : prev));
   };
 
   const onReset = () => {
     setGameOver(false);
     setMoves(0);
-    setResetKey((k) => k + 1); // ✅ Force full Canvas + Game remount
+    setResetKey((k) => k + 1); 
   };
 
   return (
@@ -28,7 +28,7 @@ export default function App() {
   <Canvas
     key={resetKey}
     shadows
-    style={{ width: "100%", height: "100%", display: "block" }} // ✅ Important fix
+    style={{ width: "100%", height: "100%", display: "block" }} 
     camera={{
       position: [0, 20, 0],
       fov: 40,
