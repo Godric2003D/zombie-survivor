@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { MathUtils, TextureLoader, Vector3 } from "three";
+import { MathUtils, TextureLoader } from "three";
 import { GRID_SIZE, CELL } from "../../utils/constants";
 import useKeyboardMovement from "../../Hooks/UseKeyboardMovement/UseKeyboardMovement";
 
@@ -11,6 +11,7 @@ import playerZombie from "../../models/PlayerZombiefied.png";
 
 export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies }) {
   const meshRef = useRef();
+  const firstFrame = useRef(true); // Track first frame
 
   // Load textures
   const calmTexture = useLoader(TextureLoader, playerCalm);
@@ -43,12 +44,19 @@ export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies 
   }, [isGameOver, isZombieNear, calmTexture, panicTexture, zombieTexture]);
 
   // Billboard effect: rotate only around Y axis, keep upright
-  useFrame(({ camera }) => {
+  useFrame(() => {
     if (!meshRef.current) return;
     const [tx, , tz] = worldFromGrid(pos.x, pos.y);
     const targetY = 0.75;
-    
-    // Smoothly interpolate the player's position
+
+    if (firstFrame.current) {
+      // Set exact position on first frame to prevent glitch
+      meshRef.current.position.set(tx, targetY, tz);
+      firstFrame.current = false;
+      return;
+    }
+
+    // Smoothly interpolate position after first frame
     meshRef.current.position.x = MathUtils.lerp(meshRef.current.position.x, tx, 0.15);
     meshRef.current.position.y = MathUtils.lerp(meshRef.current.position.y, targetY, 0.15);
     meshRef.current.position.z = MathUtils.lerp(meshRef.current.position.z, tz, 0.15);
@@ -57,16 +65,9 @@ export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies 
   });
 
   return (
-    <mesh
-      ref={meshRef}
-      castShadow
-    >
+    <mesh ref={meshRef} castShadow>
       <planeGeometry args={[1.5, 1.5]} />
-      <meshStandardMaterial
-        map={playerTexture}
-        transparent
-        side={2}
-      />
+      <meshStandardMaterial map={playerTexture} transparent side={2} />
     </mesh>
   );
 }

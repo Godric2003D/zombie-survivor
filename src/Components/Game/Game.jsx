@@ -24,7 +24,7 @@ function generateGrid() {
   const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   for (let y = 1; y < GRID_SIZE ; y++) {
     for (let x = 1; x < GRID_SIZE ; x++) {
-      if (Math.random() < 0.3) grid[y][x] = 1; // 1 means obstacle
+      if (Math.random() < 0.2) grid[y][x] = 1; // 1 means obstacle
     }
   }
   return grid;
