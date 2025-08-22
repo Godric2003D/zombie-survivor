@@ -6,8 +6,8 @@ import useKeyboardMovement from "../../Hooks/UseKeyboardMovement/UseKeyboardMove
 
 // Import player textures
 import playerCalm from "../../models/playerCalm.png";
-import playerPanic from "../../models/playerNervous.png";
-import playerZombie from "../../models/playerZombiefied.png";
+import playerPanic from "../../models/PlayerNervous.png";
+import playerZombie from "../../models/PlayerZombiefied.png";
 
 export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies }) {
   const meshRef = useRef();
