@@ -1,12 +1,41 @@
-# React + Vite
+# 🧟‍♂️ Zombie Survivor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![React](https://img.shields.io/badge/React-18-blue.svg?style=flat-square)](https://reactjs.org/) 
+[![Three.js](https://img.shields.io/badge/Three.js-0.159.0-orange.svg?style=flat-square)](https://threejs.org/) 
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/JavaScript) 
+[![Vercel](https://img.shields.io/badge/Deployment-Vercel-black.svg?style=flat-square)](https://vercel.com/) 
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Zombie Survivor** is a top-down 3D survival game developed with **React** and **React Three Fiber**. Navigate through a procedurally generated maze while evading a relentless zombie using pathfinding intelligence.
 
-## Expanding the ESLint configuration
+## 🌐 Play Online
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Experience the game directly in your browser here:  
+🔗 [zombie-survivor.vercel.app](https://zombie-survivor.vercel.app/)
+
+## 🎮 Gameplay
+
+- Survive as long as possible while navigating a dynamic maze.  
+- Avoid zombies that actively chase you using **Dijkstra's Algorithm**.  
+- The zombie calculates the shortest path to the player in real-time, creating a challenging survival experience.
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React, React Three Fiber, Three.js  
+- **3D Rendering:** @react-three/fiber, @react-three/drei  
+- **Game Mechanics:** JavaScript, ES6 Modules  
+- **Pathfinding:** Dijkstra's Algorithm (shortest-path chasing logic)  
+- **Deployment:** Vercel  
+
+## 🧠 Algorithm : Dijkstra
+
+The zombie enemy intelligently calculates the shortest path to the player using **Dijkstra's Algorithm**:  
+
+1. The maze is represented as a grid graph where each cell is a node.  
+2. Each movement option (up, down, left, right) is an edge with equal weight.  
+3. The algorithm computes the minimum distance from the zombie’s current position to the player's position.  
+4. The zombie moves along the shortest path every game tick, ensuring it actively pursues the player.
+
+---
+
+Built with ❤️ by **Debayan Ray**  
