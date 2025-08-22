@@ -1,12 +1,14 @@
 import React from "react";
 
 export default function HUD({ moves, highScore, gameOver, onReset }) {
+  
   return (
     <div
       style={{
         position: "absolute",
         top: 12,
         left: 12,
+        zIndex: 10000,
         padding: "8px 10px",
         background: "rgba(0,0,0,0.45)",
         color: "#fff",
@@ -14,6 +16,7 @@ export default function HUD({ moves, highScore, gameOver, onReset }) {
         fontFamily: "ui-sans-serif, system-ui",
       }}
     >
+      
       <div style={{ fontWeight: 700, marginBottom: 4 }}>Zombie Survivor</div>
       <div>Moves: {moves}</div>
       <div style={{ marginTop: 4 }}>High Score: {highScore}</div>
@@ -26,7 +29,7 @@ export default function HUD({ moves, highScore, gameOver, onReset }) {
             <div style={{ color: "#4ade80", fontWeight: 700 }}>New High Score!</div>
           )}
           <button
-            onClick={onReset}
+            onClick={() => { console.log("Button clicked"); onReset(); }}
             style={{
               marginTop: 6,
               padding: "6px 10px",

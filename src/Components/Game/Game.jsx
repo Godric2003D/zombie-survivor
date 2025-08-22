@@ -4,7 +4,6 @@ import { Player } from "../Player/Player";
 import { ZombiesController } from "../ZombieController/ZombieController";
 import { GRID_SIZE, CELL, NUM_ZOMBIES, ZOMBIE_STEP_INTERVAL_MS, STEP_INTERVAL_MS, OBSTACLE_DENSITY, clamp } from "../../utils/constants";
 
-
 function randomEmptyCell(grid) {
   while (true) {
     const x = Math.floor(Math.random() * GRID_SIZE);
@@ -23,13 +22,33 @@ function generateGrid() {
   return grid;
 }
 
+// Helper to initialize zombies with stepStart
+function initialZombiePositions(grid) {
+  const now = performance.now();
+  return Array.from({ length: NUM_ZOMBIES }, () => {
+    const cell = randomEmptyCell(grid);
+    return { ...cell, stepStart: now };
+  });
+}
+
 export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
-  const [grid] = useState(generateGrid);
+  const [grid, setGrid] = useState(generateGrid);
   const [playerPos, setPlayerPos] = useState(() => randomEmptyCell(grid));
   const [zombiePositions, setZombiePositions] = useState(() =>
-    Array.from({ length: NUM_ZOMBIES }, () => randomEmptyCell(grid))
+    initialZombiePositions(grid)
   );
   const [zombieSpeed, setZombieSpeed] = useState(ZOMBIE_STEP_INTERVAL_MS);
+
+  // Reset game state when isGameOver becomes false (on reset)
+  useEffect(() => {
+    if (!isGameOver) {
+      const newGrid = generateGrid();
+      setGrid(newGrid);
+      setPlayerPos(randomEmptyCell(newGrid));
+      setZombiePositions(initialZombiePositions(newGrid));
+      setZombieSpeed(ZOMBIE_STEP_INTERVAL_MS);
+    }
+  }, [isGameOver]);
 
   useEffect(() => {
     if (moves > 0 && moves % 10 === 0) {
@@ -51,7 +70,13 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
     <>
       <Floor />
       <CellWalls grid={grid} />
-      <Player pos={playerPos} grid={grid} setPlayerPos={setPlayerPos} setMoves={setMoves} isGameOver={isGameOver} />
+      <Player
+        pos={playerPos}
+        grid={grid}
+        setPlayerPos={setPlayerPos}
+        setMoves={setMoves}
+        isGameOver={isGameOver}
+      />
       {!isGameOver && (
         <ZombiesController
           grid={grid}
