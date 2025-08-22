@@ -22,8 +22,8 @@ function randomEmptyCell(grid) {
 
 function generateGrid() {
   const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
-  for (let y = 1; y < GRID_SIZE - 1; y++) {
-    for (let x = 1; x < GRID_SIZE - 1; x++) {
+  for (let y = 1; y < GRID_SIZE ; y++) {
+    for (let x = 1; x < GRID_SIZE ; x++) {
       if (Math.random() < 0.3) grid[y][x] = 1; // 1 means obstacle
     }
   }
@@ -60,7 +60,7 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
   // Increase zombie speed every 10 moves
   useEffect(() => {
     if (moves > 0 && moves % 10 === 0) {
-      setZombieSpeed((prev) => Math.max(prev - 20, 80));
+      setZombieSpeed((prev) => Math.max(prev - 20, 100));
     }
   }, [moves]);
 
