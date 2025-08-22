@@ -66,7 +66,7 @@ export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies 
 
   return (
     <mesh ref={meshRef} >
-      <planeGeometry args={[1.5, 1.5]} />
+      <planeGeometry args={[1.1,1.1]} />
       <meshStandardMaterial map={playerTexture} transparent side={2} />
     </mesh>
   );

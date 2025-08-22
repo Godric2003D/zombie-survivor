@@ -128,7 +128,7 @@ export default function App() {
       {isAgreed && (
         <>
           <HUD moves={moves} highScore={highScore} gameOver={gameOver} onReset={onReset} />
-          <div key={gameKey} style={{ width: "100%", height: "100%" }}>
+          <div key={gameKey} style={{ width: "100%", height: "calc(100% - 20px)" }}>
             <Canvas
               key={gameKey}
               shadows
@@ -156,6 +156,48 @@ export default function App() {
           {/* Audio Elements */}
           <audio ref={bgMusicRef} src={bgMusicFile} />
           <audio ref={gameOverRef} src={gameOverSoundFile} />
+          <div
+  style={{
+    position: "absolute",
+    bottom: 5,
+    width: "100%",
+    textAlign: "center",
+    color: "#00ff00",
+    fontFamily: "'Press Start 2P', cursive",
+    fontSize: "10px",
+    textShadow: "1px 1px #000",
+  }}
+>
+  © 2025 Debayan Ray. All rights reserved. Made with{" "}
+  <span
+    style={{
+      color: "red",
+      display: "inline-block",
+      animation: "pulse 1s infinite alternate",
+    }}
+  >
+    ❤️
+  </span>{" "}
+  by{" "}
+  <a
+    href="https://www.linkedin.com/in/debayan-ray-8a8540201/"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ color: "#00ff00", textDecoration: "underline" }}
+  >
+    me
+  </a>
+
+ 
+  <style>{`
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.3); }
+    }
+  `}</style>
+</div>
+
+
         </>
       )}
     </div>

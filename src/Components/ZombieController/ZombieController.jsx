@@ -80,7 +80,7 @@ function Zombie({ pos }) {
   const [wx, wy, wz] = worldFromGrid(pos.x, pos.y);
   return (
     <mesh position={[wx, wy, wz]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.4, 1.4, 1.4]} castShadow>
-      <planeGeometry args={[0.8, 0.8]} />
+      <planeGeometry args={[0.7, 0.7]} />
       <meshStandardMaterial map={zombieTexture} transparent />
     </mesh>
   );
