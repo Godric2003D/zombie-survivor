@@ -1,4 +1,4 @@
-export const GRID_SIZE = 15;
+export const GRID_SIZE = 14;
 export const CELL = 1;
 export const NUM_ZOMBIES = 1;
 export const STEP_INTERVAL_MS = 90;

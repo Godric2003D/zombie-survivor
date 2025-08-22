@@ -1,13 +1,23 @@
-import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { MathUtils } from "three";
-import { GRID_SIZE, CELL, NUM_ZOMBIES, ZOMBIE_STEP_INTERVAL_MS, STEP_INTERVAL_MS, OBSTACLE_DENSITY, clamp } from "../../utils/constants";
-
+import React, { useRef, useMemo } from "react";
+import { useFrame, useLoader } from "@react-three/fiber";
+import { MathUtils, TextureLoader, Vector3 } from "three";
+import { GRID_SIZE, CELL } from "../../utils/constants";
 import useKeyboardMovement from "../../Hooks/UseKeyboardMovement/UseKeyboardMovement";
 
-export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver }) {
+// Import player textures
+import playerCalm from "../../models/playerCalm.png";
+import playerPanic from "../../models/playerNervous.png";
+import playerZombie from "../../models/playerZombiefied.png";
+
+export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver, zombies }) {
   const meshRef = useRef();
 
+  // Load textures
+  const calmTexture = useLoader(TextureLoader, playerCalm);
+  const panicTexture = useLoader(TextureLoader, playerPanic);
+  const zombieTexture = useLoader(TextureLoader, playerZombie);
+
+  // Convert grid coords to world position
   const worldFromGrid = (x, y) => {
     const half = (GRID_SIZE * CELL) / 2;
     const wx = -half + x * CELL + CELL / 2;
@@ -15,19 +25,48 @@ export function Player({ pos, grid, setPlayerPos, setMoves, isGameOver }) {
     return [wx, 0, wz];
   };
 
+  // Movement logic
   useKeyboardMovement(grid, pos, setPlayerPos, setMoves, isGameOver);
 
-  useFrame(() => {
+  // Detect if zombie is nearby (within 3 blocks)
+  const isZombieNear = useMemo(() => {
+    return zombies?.some(
+      (z) => Math.abs(z.x - pos.x) <= 3 && Math.abs(z.y - pos.y) <= 3
+    );
+  }, [zombies, pos]);
+
+  // Select player texture based on state
+  const playerTexture = useMemo(() => {
+    if (isGameOver) return zombieTexture; // touched by zombie
+    if (isZombieNear) return panicTexture; // zombie within 3 blocks
+    return calmTexture; // default calm face
+  }, [isGameOver, isZombieNear, calmTexture, panicTexture, zombieTexture]);
+
+  // Billboard effect: rotate only around Y axis, keep upright
+  useFrame(({ camera }) => {
     if (!meshRef.current) return;
     const [tx, , tz] = worldFromGrid(pos.x, pos.y);
+    const targetY = 0.75;
+    
+    // Smoothly interpolate the player's position
     meshRef.current.position.x = MathUtils.lerp(meshRef.current.position.x, tx, 0.15);
+    meshRef.current.position.y = MathUtils.lerp(meshRef.current.position.y, targetY, 0.15);
     meshRef.current.position.z = MathUtils.lerp(meshRef.current.position.z, tz, 0.15);
+
+    meshRef.current.rotation.set(180, 0, 0);
   });
 
   return (
-    <mesh ref={meshRef} position={worldFromGrid(pos.x, pos.y)} castShadow>
-      <sphereGeometry args={[0.35, 16, 16]} />
-      <meshStandardMaterial color="#4ade80" />
+    <mesh
+      ref={meshRef}
+      castShadow
+    >
+      <planeGeometry args={[1.5, 1.5]} />
+      <meshStandardMaterial
+        map={playerTexture}
+        transparent
+        side={2}
+      />
     </mesh>
   );
 }

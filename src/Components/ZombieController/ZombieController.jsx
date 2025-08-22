@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { GRID_SIZE, CELL, NUM_ZOMBIES, ZOMBIE_STEP_INTERVAL_MS, STEP_INTERVAL_MS, OBSTACLE_DENSITY, clamp } from "../../utils/constants";
-
-
+import { TextureLoader } from "three";
+import { useLoader } from '@react-three/fiber';
+import zombieImage from "../../models/zombie.png";
 function neighborsOf(x, y, grid) {
   const neigh = [];
   const tryPush = (nx, ny) => {
@@ -75,11 +76,12 @@ function worldFromGrid(x, y) {
 }
 
 function Zombie({ pos }) {
+  const zombieTexture = useLoader(TextureLoader, zombieImage);
   const [wx, wy, wz] = worldFromGrid(pos.x, pos.y);
   return (
-    <mesh position={[wx, wy, wz]} castShadow>
-      <boxGeometry args={[0.6, 0.6, 0.6]} />
-      <meshStandardMaterial color="#ef4444" />
+    <mesh position={[wx, wy, wz]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.4, 1.4, 1.4]} castShadow>
+      <planeGeometry args={[0.8, 0.8]} />
+      <meshStandardMaterial map={zombieTexture} transparent />
     </mesh>
   );
 }

@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Floor, CellWalls } from "../Grid/Grid";
 import { Player } from "../Player/Player";
 import { ZombiesController } from "../ZombieController/ZombieController";
-import { GRID_SIZE, CELL, NUM_ZOMBIES, ZOMBIE_STEP_INTERVAL_MS, STEP_INTERVAL_MS, OBSTACLE_DENSITY, clamp } from "../../utils/constants";
+import {
+  GRID_SIZE,
+  CELL,
+  NUM_ZOMBIES,
+  ZOMBIE_STEP_INTERVAL_MS,
+  STEP_INTERVAL_MS,
+  OBSTACLE_DENSITY,
+  clamp,
+} from "../../utils/constants";
 
 function randomEmptyCell(grid) {
   while (true) {
@@ -16,13 +24,12 @@ function generateGrid() {
   const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
   for (let y = 1; y < GRID_SIZE - 1; y++) {
     for (let x = 1; x < GRID_SIZE - 1; x++) {
-      if (Math.random() < 0.3) grid[y][x] = 1;
+      if (Math.random() < 0.3) grid[y][x] = 1; // 1 means obstacle
     }
   }
   return grid;
 }
 
-// Helper to initialize zombies with stepStart
 function initialZombiePositions(grid) {
   const now = performance.now();
   return Array.from({ length: NUM_ZOMBIES }, () => {
@@ -50,12 +57,14 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
     }
   }, [isGameOver]);
 
+  // Increase zombie speed every 10 moves
   useEffect(() => {
     if (moves > 0 && moves % 10 === 0) {
       setZombieSpeed((prev) => Math.max(prev - 20, 80));
     }
   }, [moves]);
-  
+
+  // Check if zombie reaches player
   useEffect(() => {
     if (isGameOver) return;
     for (const z of zombiePositions) {
@@ -76,6 +85,7 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
         setPlayerPos={setPlayerPos}
         setMoves={setMoves}
         isGameOver={isGameOver}
+        zombies={zombiePositions} // ✅ Corrected: was `zombies` (undefined)
       />
       {!isGameOver && (
         <ZombiesController
