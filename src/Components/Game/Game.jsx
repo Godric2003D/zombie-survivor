@@ -85,7 +85,7 @@ export default function Game({ onGameOver, setMoves, moves, isGameOver }) {
         setPlayerPos={setPlayerPos}
         setMoves={setMoves}
         isGameOver={isGameOver}
-        zombies={zombiePositions} // ✅ Corrected: was `zombies` (undefined)
+        zombies={zombiePositions} 
       />
       {!isGameOver && (
         <ZombiesController
